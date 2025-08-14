@@ -20,7 +20,8 @@ ui <- fluidPage(
       radioButtons("pkmetric", "PK metric selection:",
                    c("CMAX" = "CMAX",
                      "CMIN" = "CMIN",
-                     "CAVG" = "CAVG")),
+                     "CAVG" = "CAVG",
+                     "AUC" = "AUC")),
       plotOutput("sim_plot"),
     ),
     mainPanel(navset_tab(
@@ -72,6 +73,7 @@ server <- function(input, output) {
     summarise(CMAXC1 = max(CMAX),
               CMINC1 = IPRED[n()],
               CAVGC1 = max(AUC)/24*input$ii_choice,
+              AUCC1 = max(AUC),
               CL = median(CL),
               Q = median(Q),
               V1 = median(V1),
@@ -79,7 +81,8 @@ server <- function(input, output) {
     ungroup() %>%
     mutate(QCMAXC1 = ntile(CMAXC1, 4),
            QCMINC1 = ntile(CMINC1, 4),
-           QCAVGC1 = ntile(CAVGC1, 4))})
+           QCAVGC1 = ntile(CAVGC1, 4),
+           QAUCC1 = ntile(AUCC1, 4))})
 
   TTEsim <- reactive({
     TTEmod <- mread("TTEmodel.cpp")
@@ -98,7 +101,8 @@ server <- function(input, output) {
     ungroup() %>%
     mutate(QCMAX = ntile(CMAX, 4),
            QCMIN = ntile(CMIN, 4),
-           QCAVG = ntile(CAVG, 4))})
+           QCAVG = ntile(CAVG, 4),
+           QAUC = ntile(AUC, 4))})
 
   TTEsim_corr <- reactive({TTEsim() %>%
     group_by(ID) %>%
@@ -109,7 +113,8 @@ server <- function(input, output) {
     ungroup() %>%
     mutate(QCMAX = ntile(CMAX, 4),
            QCMIN = ntile(CMIN, 4),
-           QCAVG = ntile(CAVG, 4))})
+           QCAVG = ntile(CAVG, 4),
+           QAUC = ntile(AUC, 4))})
 
   pvalueqt <- reactive({
     fit.base0 <- coxph(Surv(time/24/30.475,DV)~1 , data=TTEsim_null())
